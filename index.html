@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRACO</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+  <div id="heroLogo" class="hero-logo">
+    <img src="Media/Logo/logo_draco.png" alt="DRACO">
+  </div>
+
+    <header>
+        <div>
+            <ul>
+                <button id="menuButton" type="button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="black" stroke-width="1.5">
+                        <line x1="4" y1="6" x2="20" y2="6" stroke-linecap="round"/>
+                        <line x1="4" y1="10" x2="20" y2="10" stroke-linecap="round"/>
+                        <line x1="4" y1="14" x2="20" y2="14" stroke-linecap="round"/>
+                        <line x1="4" y1="18" x2="20" y2="18" stroke-linecap="round"/>
+                    </svg>
+                    Menú
+                </button>
+
+                <div class="dropdown-overlay" id="dropdownOverlay">
+                  <div class="dropdown-menu slide-in" id="dropdownMenu">
+                    <button id="closeMenu" class="close-menu-btn">✕</button>
+                    <a href="index.html">Inicio</a>
+                    <a href="categoria.html">Categoría</a>
+                    <a href="colecciones.html">Colecciones</a>
+                    <a href="#">Contacto</a>
+
+                  </div>
+                </div>
+
+                <li id="searchWrapper">
+                  <button id="searchTrigger" class="search-trigger">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                      xmlns="http://www.w3.org/2000/svg" stroke="black" stroke-width="1.5">
+                      <circle cx="10" cy="10" r="6" stroke-linecap="round" stroke-linejoin="round"/>
+                      <line x1="14.5" y1="14.5" x2="20" y2="20" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Buscar
+                  </button>
+
+                  <form id="searchForm" class="search-form" action="busqueda.html" method="get">
+                    <span class="search-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        xmlns="http://www.w3.org/2000/svg" stroke="black" stroke-width="1.5">
+                        <circle cx="10" cy="10" r="6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="14.5" y1="14.5" x2="20" y2="20" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                    <input type="text" name="q" placeholder="Buscar en el sitio..." required />
+                    <button type="button" id="searchClose" class="close-search">✕</button>
+                  </form>
+                </li>
+            </ul>
+        </div>
+
+        <div class="header-center">
+            <a href='index.html'>
+                <img src="Media/Logo/logo_draco.png" alt="" width="30%" style="filter: invert(100%)">
+            </a>
+        </div>
+
+        <div>
+            <ul>
+                <button id="contactButton">Contactar</button>
+                <div class="contact-overlay" id="contactOverlay">
+                  <div class="contact-panel">
+                    <button class="close-contact" id="closeContact">✕</button>
+                    <h2>COMUNÍQUESE CON NOSOTROS</h2>
+
+                    <p>
+                      <a href="tel:+524436462684">📞 LLÁMENOS +52 4436 4626 84</a><br>
+                      <small>De lunes a sábado de 8:00 a 22:00 (hora centro MX).<br>
+                      Domingo de 9:00 a 20:00 (hora centro MX).</small>
+                    </p>
+
+                    <p>
+                      <span style="color: gold;">●</span>
+                      <a href="#">CHAT EN VIVO</a><br>
+                      <small>De lunes a sábado de 9:00 a 23:00 (hora centro MX).<br>
+                      Domingo de 10:00 a 21:00 (hora centro MX).</small>
+                    </p>
+
+                    <p>¿Necesita más ayuda?<br>
+                    <a href="#">Póngase en contacto con nuestro equipo</a></p>
+                  </div>
+                </div>
+
+                <li id="userWrapper">
+                  <button id="userButton">
+                    <!-- Icono usuario -->
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        xmlns="http://www.w3.org/2000/svg" stroke="black" stroke-width="1.5">
+                      <circle cx="12" cy="8" r="4" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M4 20C4 16.6863 7.58172 14 12 14
+                              C16.4183 14 20 16.6863 20 20"
+                            stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+
+                  <div class="user-overlay" id="userOverlay">
+                    <div class="user-panel">
+                      <button class="close-user" id="closeUser">✕</button>
+
+                      <!-- USER INFO (visible tras login) -->
+                        <div id="userInfoSection" style="display: none;">
+                          <h2>Bienvenido, <span id="userNameDisplay"></span></h2>
+                          <button id="logoutButton">Cerrar sesión</button>
+                        </div>
+
+
+                      <!-- LOGIN -->
+                      <div id="loginSection">
+                        <h2>Iniciar sesión</h2>
+                        <form id="loginForm">
+                          <label>E-mail<br><input type="email" name="username" required></label>
+                          <label>Contraseña<br><input type="password" name="password" required></label>
+                          <button type="submit">Entrar</button>
+                        </form>
+                        <p><a href="#" id="forgotLink">¿Olvidó su contraseña?</a></p>
+                        <hr>
+                        <p>¿No tienes cuenta? <a href="#" id="registerLink">Regístrate</a></p>
+                      </div>
+
+                      <!-- REGISTER -->
+                      <div id="registerSection" style="display:none;">
+                        <h2>Regístrate</h2>
+                        <form id="registerForm">
+                          <label>Correo electrónico*<br>
+                            <input type="email" name="email" required>
+                          </label>
+                          <label>Usuario*<br>
+                            <input type="text" name="username" required>
+                          </label>
+                          <label>Apellidos (opcional)<br>
+                            <input type="text" name="lastName">
+                          </label>
+                          <label>Contraseña*<br>
+                            <input type="password" name="password" required>
+                          </label>
+                          <label>Confirmar contraseña*<br>
+                            <input type="password" name="confirmPassword" required>
+                          </label>
+                          <label>Número de teléfono (opcional)<br>
+                            <input type="tel" name="phone">
+                          </label>
+                          <label>Talla de zapato MX*<br>
+                            <input type="number" name="shoeSize" required>
+                          </label>
+                          <button type="submit">Crear cuenta</button>
+                        </form>
+                        <p>¿Ya tienes cuenta? <a href="#" id="backToLogin">Iniciar sesión</a></p>
+                      </div>
+
+                      <!-- FORGOT -->
+                      <div id="forgotSection" style="display:none;">
+                        <h2>Recuperar contraseña</h2>
+                        <form id="forgotForm">
+                          <label>Usuario<br><input type="text" name="username" required></label>
+                          <button type="submit">Enviar enlace</button>
+                        </form>
+                        <p>¿Recordaste? <a href="#" id="backToLogin2">Iniciar sesión</a></p>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+
+                <button id="cartButton" type="button" onclick="window.location.href='cart.html';">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="black" stroke-width="1.5">
+                    <path d="M6 8L4 20H20L18 8H6Z" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 8V6C9 4.34315 10.3431 3 12 3C13.6569 3 15 4.34315 15 6V8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+            </ul>
+        </div>
+    </header>
+
+
+
+
+<!--AQUÍ COMENZAR EL BODY, LO DEMÁS ES LA PLANTILLA CON HEADER Y FOOTER-->
+<div class="section">
+  <main>
+     <div class="section">
+       <h2>Sección 1</h2>
+       <p>Este es un texto de prueba para mostrar contenido en la página.</p>
+     </div>
+
+     <div class="section">
+       <h2>Sección 2</h2>
+       <p>Otro recuadro con texto, para que la página se pueda scrollear.</p>
+     </div>
+
+     <div class="section">
+       <h2>Sección 3</h2>
+       <p>Contenido adicional de ejemplo. Aquí podrías poner noticias, artículos o información.</p>
+     </div>
+
+     <div class="section">
+       <h2>Sección 4</h2>
+       <p>Más texto de relleno para simular una página larga.</p>
+     </div>
+   </main>
+
+   
+</div>
+
+<footer class="footer">
+  <div class="footer-top">
+    <div class="footer-col newsletter">
+      <form class="footer-form">
+        <div class="footer-input-group">
+          <input type="email" id="email" placeholder="Inserta tu dirección de correo electrónico*" required>
+          <button type="submit">→</button>
+        </div>
+      </form>
+      <div class="footer-socials">
+        <a href="https://facebook.com" target="_blank"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="https://x.com" target="_blank"><i class="fa-brands fa-x-twitter"></i></a>
+        <a href="https://instagram.com" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://youtube.com" target="_blank"><i class="fa-brands fa-youtube"></i></a>
+        <a href="https://spotify.com" target="_blank"><i class="fa-brands fa-spotify"></i></a>
+        <a href="https://discord.com" target="_blank"><i class="fa-brands fa-discord"></i></a>
+        <a href="https://tiktok.com" target="_blank"><i class="fa-brands fa-tiktok"></i></a>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h4>COMPAÑIA</h4>
+      <ul>
+        <li><a href="About.html#FundacionDraco">Fundación DRACO</a></li>
+        <li><a href="About.html#NuestroGrupo">Nuestro Grupo</a></li>
+        <li><a href="About.html#Colaboraciones">Colaboraciones</a></li>
+        <li><a href="About.html#Sostenibilidad">Sostenibilidad</a></li>
+        <li><a href="About.html#TrabajaConNosotros">Trabaja con nosotros</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>TERMINOS LEGALES Y CONDICIONES</h4>
+      <ul>
+        <li><a href="Terminos.html#AvisoLegal">Aviso Legal</a></li>
+        <li><a href="Terminos.html#PoliticaPrivacidad">Política de Privacidad</a></li>
+        <li><a href="Terminos.html#PoliticaCookies">Política de Cookies</a></li>
+        <li><a href="Terminos.html#ConfiguracionCookies">Configuración de Cookies</a></li>
+        <li><a href="Terminos.html#MapaDelSitio">Mapa del Sitio</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© DRACO 2025 – Todos los derechos reservados</p>
+    <div class="footer-location">
+      <a href="https://www.google.com/maps/d/edit?mid=1ng7s8Vt-bCeyRdHtiBTsKSIHXwYOQXM&usp=sharing" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-location-dot"></i>MOSTRAR SUCURSALES</a>
+      <span><i class="fa-solid fa-globe"></i> LOCATION: LATINOAMÉRICA</span>
+    </div>
+  </div>
+</footer>
+
+</html>
