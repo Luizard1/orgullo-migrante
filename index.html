@@ -183,35 +183,105 @@
         </div>
     </header>
 
+    <div class="video-container">
+        <video src="Media/video_draco2.mp4" autoplay loop ></video>
+        <div class="overlay">
+            <h1>DRACO</h1>
+            <h3>ZAPATOS DE ALTA GAMA</h3>
+            <button><a href="categoria.html">VER CATEGORIA</a></button>
+        </div>
+    </div>
+
+    <section class="promo-section fade-in-up">
+      <div class="promo-image">
+        <img src="Media/zapatosgala.png" alt="Zapatos de gala">
+      </div>
+      <div class="promo-text">
+        <h1>CAMINAR COMO UN DRACO</h1>
+        <p>Con cada pisada, la distinción toma forma.
+          En la fusión de fuerza y refinamiento, el calzado revela su alma:
+          audaz, atemporal, absolutamente inolvidable.</p>
+        <button><a href="colecciones.html">Vístase de presencia.</a></button>
+      </div>
+    </section>
+
+    <section class="promo-section fade-in-up">
+      <div class="promo-text">
+        <h1>DONDE CAMINA LA ELEGANCIA</h1>
+        <p>Entre texturas nobles y líneas precisas, el paso se vuelve arte. El calzado no solo viste: susurra presencia, transforma el momento.</p>
+        <button><a href="colecciones.html">Vístase de presencia.</a></button>
+      </div>
+      <div class="promo-image">
+        <img src="Media/dibujando.png" alt="Diseñador DRACO">
+      </div>
+    </section>
+
+    <section class="catalog-section fade-in-up">
+      <a href="product.html?id=producto1" class="catalog-item">
+        <img src="Media/catalog0.png" alt="Zapato Gala Negro">
+        <h3>Zapato de Gala Negro</h3>
+        <p>MXN$ 7,900</p>
+      </a>
+
+      <a href="product.html?id=producto2" class="catalog-item">
+        <img src="Media/catalog2.png" alt="Oxford Caramelo">
+        <h3>Zapato Oxford Caramelo</h3>
+        <p>MXN$ 8,200</p>
+      </a>
+
+      <a href="product.html?id=producto3" class="catalog-item">
+        <img src="Media/catalog4.png" alt="Monk Strap de Piel">
+        <h3>Zapato Monk Strap de Piel</h3>
+        <p>MXN$ 8,750</p>
+      </a>
+
+      <a href="product.html?id=producto4" class="catalog-item">
+        <img src="Media/catalog5.png" alt="Slip-On Texturizado">
+        <h3>Zapato Slip-On Texturizado</h3>
+        <p>MXN$ 6,500</p>
+      </a>
+    </section>
+
+    <script src="js/menu.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/contacto.js"></script>
+    <script src="js/hero.js"></script>
+    <script src="js/user.js"></script>
+
+    <script type="module" src="js/supabaseClient.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/loginUsuario.js"></script>
+    <script type="module" src="js/registrarUsuario.js"></script>
+    <script type="module" src="js/verificarSesion.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+    <script src="js/enviarCorreo.js"></script>
 
 
 
-<!--AQUÍ COMENZAR EL BODY, LO DEMÁS ES LA PLANTILLA CON HEADER Y FOOTER-->
-<div class="section">
-  <main>
-     <div class="section">
-       <h2>Sección 1</h2>
-       <p>Este es un texto de prueba para mostrar contenido en la página.</p>
-     </div>
+    <script>
+      window.addEventListener('mouseover', initLandbot, { once: true });
+      window.addEventListener('touchstart', initLandbot, { once: true });
+      var myLandbot;
+      function initLandbot() {
+        if (!myLandbot) {
+          var s = document.createElement('script');
+          s.type = "module"
+          s.async = true;
+          s.addEventListener('load', function() {
+            var myLandbot = new Landbot.Livechat({
+              configUrl: 'https://storage.googleapis.com/landbot.online/v3/H-2956506-BW6IYEFE5HSUOY9J/index.json',
+            });
+          });
+          s.src = 'https://cdn.landbot.io/landbot-3/landbot-3.0.0.mjs';
+          var x = document.getElementsByTagName('script')[0];
+          x.parentNode.insertBefore(s, x);
+        }
+      }
+      </script>
 
-     <div class="section">
-       <h2>Sección 2</h2>
-       <p>Otro recuadro con texto, para que la página se pueda scrollear.</p>
-     </div>
 
-     <div class="section">
-       <h2>Sección 3</h2>
-       <p>Contenido adicional de ejemplo. Aquí podrías poner noticias, artículos o información.</p>
-     </div>
-
-     <div class="section">
-       <h2>Sección 4</h2>
-       <p>Más texto de relleno para simular una página larga.</p>
-     </div>
-   </main>
-
-   
-</div>
+</body>
 
 <footer class="footer">
   <div class="footer-top">
