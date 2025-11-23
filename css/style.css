@@ -80,6 +80,7 @@
     transform: scale(0.8);
   }
 
+/* ------------------ PARA QUE NO SE MUEVA EL HEADER------------------------
   body.hero-scrolled header {
     transform: translateY(0);
     opacity: 1;
@@ -90,6 +91,7 @@
     transform: translateY(-100%);
     position: absolute;
   }
+*/
 
   .hero-logo {
     position: fixed;
@@ -116,7 +118,7 @@
 
 
   header {
-    position: sticky;
+    position: fixed; /*--------PARA QUE EL HEADER ESTÉ QUIETO---------------*/
     top: 0;
     z-index: 100;
     background-color: #fff;
