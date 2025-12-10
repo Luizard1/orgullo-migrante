@@ -16,7 +16,8 @@
           <p id="nombre-usuario">Bienvenido</p>
         </div>
       </div>
-      <a href="../api/logout.js" class="logout-btn">Cerrar Sesión</a>
+      <!-- Botón de cerrar sesión -->
+      <button id="logoutBtn" class="logout-btn">Cerrar Sesión</button>
     </div>
   </header>
 
@@ -31,7 +32,7 @@
 
   <script>
     async function cargarDashboard() {
-      // Aquí deberías obtener el usuario_id desde tu sistema de login
+      // Obtener datos guardados en el login
       const usuario_id = localStorage.getItem('usuario_id');
       const nombre = localStorage.getItem('nombre');
 
@@ -46,6 +47,15 @@
     }
 
     cargarDashboard();
+
+    // Función de cerrar sesión
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      // Borrar datos de sesión
+      localStorage.removeItem('usuario_id');
+      localStorage.removeItem('nombre');
+      // Redirigir al login
+      window.location.href = '../index.html';
+    });
   </script>
 </body>
 </html>
