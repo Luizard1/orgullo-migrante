@@ -116,7 +116,7 @@
       const formData = new FormData(e.target);
       formData.append('usuario_id', localStorage.getItem('usuario_id'));
 
-      const res = await fetch('/api/procesar_solicitud', {
+      const res = await fetch('../api/procesar_solicitud.js', {
         method: 'POST',
         body: formData
       });
