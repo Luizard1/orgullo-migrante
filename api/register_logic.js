@@ -1,5 +1,5 @@
 // /api/register.js
-import { supabase } from '../../lib/db.js';
+import { supabase } from '../lib/db.js';
 import bcrypt from 'bcrypt';
 
 export default async function handler(req, res) {
