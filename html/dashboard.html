@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Padrón Orgullo Migrante - Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body class="dashboard-body">
@@ -16,45 +17,112 @@
           <p id="nombre-usuario">Bienvenido</p>
         </div>
       </div>
-      <!-- Botón de cerrar sesión -->
       <button id="logoutBtn" class="logout-btn">Cerrar Sesión</button>
     </div>
   </header>
 
   <div class="main-container dashboard-container">
+
+    <!-- Estadísticas -->
     <div class="stats-grid">
       <div class="stat-card"><h3>Total de Trámites</h3><p id="total-tramites" class="stat-number">0</p></div>
       <div class="stat-card"><h3>Aprobados</h3><p id="total-aprobados" class="stat-number text-green">0</p></div>
       <div class="stat-card"><h3>En Revisión</h3><p id="total-revision" class="stat-number text-blue">0</p></div>
       <div class="stat-card"><h3>Pendientes</h3><p id="total-pendientes" class="stat-number text-orange">0</p></div>
     </div>
+
+    <!-- Tabs de acción -->
+    <div class="action-tabs">
+      <button class="tab-btn active">⬆ Cargar Documentos</button>
+      <button class="tab-btn" onclick="window.location.href='mis_tramites.html'">📄 Mis Trámites</button>
+      <button class="tab-btn">🔔 Notificaciones <span class="badge">3</span></button>
+    </div>
+
+    <!-- Formulario nueva solicitud -->
+    <div class="form-card">
+      <h2>Nueva Solicitud de Registro</h2>
+      <p class="subtitle">Completa el formulario y carga los documentos oficiales requeridos.</p>
+
+      <div class="info-box">
+        <strong>⚠ Importante:</strong> Asegúrate de que todos los documentos sean legibles y estén vigentes (PDF, JPG, PNG).
+      </div>
+
+      <form id="solicitudForm" enctype="multipart/form-data">
+        <div class="form-grid">
+          <div class="input-group">
+            <label>CURP *</label>
+            <input type="file" name="archivo_curp" required accept=".pdf,.jpg,.png">
+          </div>
+          <div class="input-group">
+            <label>RFC *</label>
+            <input type="file" name="archivo_rfc" required accept=".pdf,.jpg,.png">
+          </div>
+          <div class="input-group">
+            <label>Comprobante de Domicilio *</label>
+            <input type="file" name="archivo_domicilio" required accept=".pdf,.jpg,.png">
+          </div>
+          <div class="input-group">
+            <label>Evidencia Adicional</label>
+            <input type="file" name="archivo_evidencia" accept=".pdf,.jpg,.png">
+          </div>
+        </div>
+
+        <div class="input-group full-width">
+          <label>Tipo de Trámite *</label>
+          <select name="tipo_tramite" required>
+            <option value="">Seleccione un tipo de trámite</option>
+            <option value="registro_inicial">Registro Inicial al Padrón</option>
+            <option value="renovacion">Renovación de Folio</option>
+          </select>
+        </div>
+
+        <div class="input-group full-width">
+          <label>Observaciones (Opcional)</label>
+          <textarea name="observaciones" rows="3" placeholder="Incluye cualquier información adicional..."></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn full-btn">Enviar Solicitud</button>
+      </form>
+    </div>
   </div>
 
   <script>
     async function cargarDashboard() {
-      // Obtener datos guardados en el login
       const usuario_id = localStorage.getItem('usuario_id');
       const nombre = localStorage.getItem('nombre');
 
-      const res = await fetch(`/api/dashboard_ciudadano?usuario_id=${usuario_id}&nombre=${nombre}`);
+      // Llamada a tu API que devuelve estadísticas
+      const res = await fetch(`/api/dashboard_ciudadano?usuario_id=${usuario_id}`);
       const data = await res.json();
 
-      document.getElementById('nombre-usuario').textContent = "Bienvenido, " + data.usuario;
+      document.getElementById('nombre-usuario').textContent = "Bienvenido, " + nombre;
       document.getElementById('total-tramites').textContent = data.total_tramites;
       document.getElementById('total-aprobados').textContent = data.total_aprobados;
-      document.getElementById('total-revision').textContent = data.total_revision;
+      document.getElementById('total-revision').textContent = data.total_revisiones;
       document.getElementById('total-pendientes').textContent = data.total_pendientes;
     }
 
     cargarDashboard();
 
-    // Función de cerrar sesión
+    // Cerrar sesión
     document.getElementById('logoutBtn').addEventListener('click', () => {
-      // Borrar datos de sesión
-      localStorage.removeItem('usuario_id');
-      localStorage.removeItem('nombre');
-      // Redirigir al login
+      localStorage.clear();
       window.location.href = '../index.html';
+    });
+
+    // Enviar nueva solicitud
+    document.getElementById('solicitudForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      formData.append('usuario_id', localStorage.getItem('usuario_id'));
+
+      const res = await fetch('/api/procesar_solicitud', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      alert(data.message || 'Solicitud enviada');
     });
   </script>
 </body>
