@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Padrón Orgullo Migrante - Registro</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
 
     <div class="main-container">
-        
+
         <div class="login-card">
-            
+
             <div class="card-header">
                 <img src="https://cdn-icons-png.flaticon.com/512/263/263115.png" alt="Escudo" class="logo">
                 <h1>Padrón Orgullo Migrante</h1>
@@ -20,14 +20,14 @@
             </div>
 
             <div class="card-body">
-                
+
                 <div class="toggle-container">
-                    <button class="toggle-btn" onclick="window.location.href='index.html'">Iniciar Sesión</button>
+                    <button class="toggle-btn" onclick="window.location.href='../index.html'">Iniciar Sesión</button>
                     <button class="toggle-btn active">Registrarse</button>
                 </div>
 
-                <form action="register_logic.php" method="POST">
-    
+                <form action="php/register_logic.php" method="POST">
+
     <div class="input-group">
         <label for="fullname">Nombre Completo</label>
         <input type="text" id="fullname" name="fullname" placeholder="Juan Pérez" required>
