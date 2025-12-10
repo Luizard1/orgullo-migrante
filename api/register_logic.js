@@ -1,6 +1,6 @@
 // /api/register.js
 import { supabase } from '../lib/db.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   try {
     // Encriptar contraseña
     const password_hash = await bcrypt.hash(password, 10);
-
+    const validPassword = await bcrypt.compare(password, usuario.password_hash);
     // Insertar usuario en Supabase
     const { error } = await supabase
       .from('usuarios')
