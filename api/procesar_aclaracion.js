@@ -1,5 +1,5 @@
 // /api/procesar_aclaracion.js
-import { supabase } from '../../lib/db.js';
+import { supabase } from '../lib/db.js';
 import formidable from 'formidable';
 import fs from 'fs';
 

@@ -1,5 +1,5 @@
 // /api/panel_revisor.js
-import { supabase } from '../../lib/db.js';
+import { supabase } from '../lib/db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

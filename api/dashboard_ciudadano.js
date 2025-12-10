@@ -1,5 +1,5 @@
 // /api/dashboard_ciudadano.js
-import { supabase } from '../../lib/db.js';
+import { supabase } from '../lib/db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
