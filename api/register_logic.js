@@ -17,10 +17,10 @@ export default async function handler(req, res) {
   try {
     // Encriptar contraseña
     const password_hash = await bcrypt.hash(password, 10);
-    
+
     // Insertar usuario en Supabase
     const { error } = await supabase
-      .from('usuarios')
+      .from('padron_migrante.usuarios')
       .insert({
         nombre_completo: fullname,
         email,
