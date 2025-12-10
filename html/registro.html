@@ -26,9 +26,8 @@
                     <button class="toggle-btn active">Registrarse</button>
                 </div>
 
-                <!-- Quitamos el action directo, lo manejamos con JS -->
-                <form id="registerForm">
-
+                <!-- Formulario -->
+                <form id="registerForm" action="../api/register_logic.js" method="POST">
                     <div class="input-group">
                         <label for="fullname">Nombre Completo</label>
                         <input type="text" id="fullname" name="fullname" placeholder="Juan Pérez" required>
@@ -59,32 +58,38 @@
 
     <script>
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // evitamos que el navegador cambie de página automáticamente
+
             const formData = new FormData(e.target);
             const fullname = formData.get('fullname');
             const email = formData.get('email');
             const password = formData.get('password');
 
-            const res = await fetch('/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fullname, email, password })
-            });
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullname, email, password })
+                });
 
-            const data = await res.json();
-            const msgBox = document.getElementById('messageBox');
+                const data = await res.json();
+                const msgBox = document.getElementById('messageBox');
 
-            if (res.ok) {
-                msgBox.textContent = data.message;
-                msgBox.style.color = 'green';
+                if (res.ok) {
+                    msgBox.textContent = data.message || 'Registro exitoso';
+                    msgBox.style.color = 'green';
 
-                // Redirigir después de 2 segundos
-                setTimeout(() => {
-                    window.location.href = '../index.html';
-                }, 2000);
-            } else {
-                msgBox.textContent = data.error;
-                msgBox.style.color = 'red';
+                    // Redirigir después de 2 segundos
+                    setTimeout(() => {
+                        window.location.href = '../index.html';
+                    }, 2000);
+                } else {
+                    msgBox.textContent = data.error || 'Error en el registro';
+                    msgBox.style.color = 'red';
+                }
+            } catch (err) {
+                document.getElementById('messageBox').textContent = 'Error de conexión con el servidor';
+                document.getElementById('messageBox').style.color = 'red';
             }
         });
     </script>
