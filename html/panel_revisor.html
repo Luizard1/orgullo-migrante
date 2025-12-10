@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel del Revisor - Padrón Orgullo Migrante</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="dashboard-body">
+
+<header class="dashboard-header">
+  <div class="header-content">
+    <div class="logo-area">
+      <img src="https://cdn-icons-png.flaticon.com/512/263/263115.png" alt="Escudo" class="header-logo">
+      <div>
+        <h1>Padrón Orgullo Migrante - Panel del Revisor</h1>
+        <p id="nombre-revisor" style="font-size: 12px; opacity: 0.8;">Revisor</p>
+      </div>
+    </div>
+    <a href="#" id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+  </div>
+</header>
+
+<div class="main-container dashboard-container">
+  <div class="stats-grid">
+    <div class="stat-card"><h3>Solicitudes Totales</h3><p id="total-solicitudes" class="stat-number text-green">0</p></div>
+    <div class="stat-card"><h3>En Revisión</h3><p id="total-revision" class="stat-number text-blue">0</p></div>
+    <div class="stat-card"><h3>Pendientes</h3><p id="total-pendientes" class="stat-number text-orange">0</p></div>
+    <div class="stat-card"><h3>Revisadas Hoy</h3><p id="total-hoy" class="stat-number">0</p></div>
+  </div>
+
+  <h2 style="margin-bottom: 20px; color: #1f2937;">Solicitudes Pendientes</h2>
+  <div id="solicitudes-container"></div>
+</div>
+
+<script>
+async function cargarPanel() {
+  const nombre = localStorage.getItem('nombre');
+  const res = await fetch(`/api/panel_revisor?nombre=${nombre}`);
+  const data = await res.json();
+
+  document.getElementById('nombre-revisor').textContent = "Revisor: " + data.revisor;
+  document.getElementById('total-solicitudes').textContent = data.total_solicitudes;
+  document.getElementById('total-revision').textContent = data.total_revision;
+  document.getElementById('total-pendientes').textContent = data.total_pendientes;
+  document.getElementById('total-hoy').textContent = data.total_hoy;
+
+  const container = document.getElementById('solicitudes-container');
+  container.innerHTML = '';
+
+  if (data.solicitudes_pendientes && data.solicitudes_pendientes.length > 0) {
+    data.solicitudes_pendientes.forEach(row => {
+      const folio = "POM-2025-" + String(row.id).padStart(5, "0");
+      const fecha = row.fecha_creacion ? new Date(row.fecha_creacion).toLocaleString() : '—';
+      const ciudadano = row.usuarios?.nombre_completo || '—';
+
+      container.innerHTML += `
+        <div class="request-card">
+          <div class="req-header">
+            <div class="req-title">
+              <h3>Actualización de Datos Personales</h3>
+              <div class="req-subtitle">Folio: <strong>${folio}</strong> • Ciudadano: ${ciudadano}</div>
+            </div>
+            <div class="status-badge"><i class="fas fa-file-alt"></i> En Revisión</div>
+          </div>
+          <div class="req-body">
+            <div>
+              <h4 style="font-size:12px; color:#6b7280; margin-bottom:5px;">Fecha de Envío</h4>
+              <p style="font-weight:600; font-size:14px;">${fecha}</p>
+            </div>
+          </div>
+        </div>`;
+    });
+  } else {
+    container.innerHTML = '<p style="text-align:center; color:#666; margin-top:50px;">No hay solicitudes pendientes de revisión.</p>';
+  }
+}
+
+cargarPanel();
+</script>
+</body>
+</html>

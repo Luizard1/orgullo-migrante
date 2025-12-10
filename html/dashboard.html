@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Padrón Orgullo Migrante - Panel</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body class="dashboard-body">
+
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="logo-area">
+        <img src="https://cdn-icons-png.flaticon.com/512/263/263115.png" alt="Escudo" class="header-logo">
+        <div>
+          <h1>Padrón Orgullo Migrante</h1>
+          <p id="nombre-usuario">Bienvenido</p>
+        </div>
+      </div>
+      <a href="../api/logout" class="logout-btn">Cerrar Sesión</a>
+    </div>
+  </header>
+
+  <div class="main-container dashboard-container">
+    <div class="stats-grid">
+      <div class="stat-card"><h3>Total de Trámites</h3><p id="total-tramites" class="stat-number">0</p></div>
+      <div class="stat-card"><h3>Aprobados</h3><p id="total-aprobados" class="stat-number text-green">0</p></div>
+      <div class="stat-card"><h3>En Revisión</h3><p id="total-revision" class="stat-number text-blue">0</p></div>
+      <div class="stat-card"><h3>Pendientes</h3><p id="total-pendientes" class="stat-number text-orange">0</p></div>
+    </div>
+  </div>
+
+  <script>
+    async function cargarDashboard() {
+      // Aquí deberías obtener el usuario_id desde tu sistema de login
+      const usuario_id = localStorage.getItem('usuario_id');
+      const nombre = localStorage.getItem('nombre');
+
+      const res = await fetch(`/api/dashboard_ciudadano?usuario_id=${usuario_id}&nombre=${nombre}`);
+      const data = await res.json();
+
+      document.getElementById('nombre-usuario').textContent = "Bienvenido, " + data.usuario;
+      document.getElementById('total-tramites').textContent = data.total_tramites;
+      document.getElementById('total-aprobados').textContent = data.total_aprobados;
+      document.getElementById('total-revision').textContent = data.total_revision;
+      document.getElementById('total-pendientes').textContent = data.total_pendientes;
+    }
+
+    cargarDashboard();
+  </script>
+</body>
+</html>

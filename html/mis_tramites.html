@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Padrón Orgullo Migrante - Mis Trámites</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body class="dashboard-body">
+
+<header class="dashboard-header">
+  <div class="header-content">
+    <div class="logo-area">
+      <img src="https://cdn-icons-png.flaticon.com/512/263/263115.png" alt="Escudo" class="header-logo">
+      <div>
+        <h1>Padrón Orgullo Migrante</h1>
+        <p id="nombre-usuario">Bienvenido</p>
+      </div>
+    </div>
+    <a href="#" id="logoutBtn" class="logout-btn">Cerrar Sesión</a>
+  </div>
+</header>
+
+<div class="main-container dashboard-container">
+  <div class="stats-grid">
+    <div class="stat-card"><h3>Total de Trámites</h3><p id="total-tramites" class="stat-number">0</p></div>
+    <div class="stat-card"><h3>Aprobados</h3><p id="total-aprobados" class="stat-number text-green">0</p></div>
+    <div class="stat-card"><h3>En Revisión</h3><p id="total-revision" class="stat-number text-blue">0</p></div>
+    <div class="stat-card"><h3>Pendientes</h3><p id="total-pendientes" class="stat-number text-orange">0</p></div>
+  </div>
+
+  <div id="lista-tramites" style="margin-top: 40px;">
+    <h2>Mis Trámites Recientes</h2>
+    <div id="tramites-container"></div>
+  </div>
+</div>
+
+<script>
+async function cargarTramites() {
+  const usuario_id = localStorage.getItem('usuario_id');
+  const nombre = localStorage.getItem('nombre');
+
+  const res = await fetch(`/api/mis_tramites?usuario_id=${usuario_id}&nombre=${nombre}`);
+  const data = await res.json();
+
+  document.getElementById('nombre-usuario').textContent = "Bienvenido, " + data.usuario;
+  document.getElementById('total-tramites').textContent = data.total_tramites;
+  document.getElementById('total-aprobados').textContent = data.total_aprobados;
+  document.getElementById('total-revision').textContent = data.total_revision;
+  document.getElementById('total-pendientes').textContent = data.total_pendientes;
+
+  const container = document.getElementById('tramites-container');
+  container.innerHTML = '';
+
+  if (data.tramites && data.tramites.length > 0) {
+    data.tramites.forEach(row => {
+      const folio = "POM-2025-" + String(row.id).padStart(5, "0");
+      const fechaSol = row.fecha_creacion ? new Date(row.fecha_creacion).toLocaleDateString() : '—';
+      const fechaAct = row.fecha_ultimo_cambio ? new Date(row.fecha_ultimo_cambio).toLocaleDateString() : '—';
+      const comentario = row.ultimos_comentarios || '';
+
+      let estadoTexto = "Devuelto", claseColor = "bg-red", icono = "times-circle", msgDefault = "El trámite ha sido devuelto.";
+      switch (row.estado_tramite) {
+        case 'activo':
+        case 'listo_activacion':
+          estadoTexto = "Aprobado"; claseColor = "bg-green"; icono = "check-circle"; msgDefault = "¡Felicidades! Tu folio ha sido aprobado."; break;
+        case 'registro_inicial':
+          estadoTexto = "En Revisión"; claseColor = "bg-black"; icono = "clock"; msgDefault = "Tu solicitud está siendo analizada."; break;
+        case 'pendiente_aclaracion':
+          estadoTexto = "Aclaración Requerida"; claseColor = "bg-orange"; icono = "exclamation-circle"; msgDefault = "Se requiere información adicional."; break;
+      }
+
+      container.innerHTML += `
+        <div class="tramite-card">
+          <div class="tramite-header">
+            <div>
+              <div class="tramite-title">Registro Padrón Orgullo Migrante</div>
+              <div class="tramite-folio">Folio: ${folio}</div>
+            </div>
+            <div class="status-pill ${claseColor}">
+              <i class="fas fa-${icono}"></i> ${estadoTexto}
+            </div>
+          </div>
+          <div class="tramite-fechas">
+            <div><div class="fecha-label">Fecha de Solicitud</div><div class="fecha-valor">${fechaSol}</div></div>
+            <div><div class="fecha-label">Última Actualización</div><div class="fecha-valor">${fechaAct}</div></div>
+          </div>
+          <div class="mensaje-revisor">
+            <i class="fas fa-info-circle mensaje-icon"></i>
+            <div>${comentario ? `<strong>Nota del Revisor:</strong> ${comentario}` : msgDefault}</div>
+          </div>
+        </div>`;
+    });
+  } else {
+    container.innerHTML = '<p style="color:#666;">Aún no tienes trámites registrados.</p>';
+  }
+}
+
+cargarTramites();
+</script>
+</body>
+</html>
