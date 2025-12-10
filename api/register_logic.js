@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
     // Insertar usuario en Supabase
     const { error } = await supabase
-      .from('padron_migrante.usuarios')
+      .from('usuarios')
       .insert({
         nombre_completo: fullname,
         email,
