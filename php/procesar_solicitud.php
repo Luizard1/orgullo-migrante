@@ -1,40 +1,46 @@
 <?php
 session_start();
-include 'db.php';
+include 'db.php'; // Debe ser PDO conectado a PostgreSQL (Supabase)
 
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.html");
     exit();
 }
 
-$usuario_id = $_SESSION['usuario_id'];
-$tipo_tramite = $_POST['tipo_tramite']; // Esto lo podrías guardar en una columna nueva si quisieras, por ahora lo usamos para lógica
+$usuario_id   = $_SESSION['usuario_id'];
+$tipo_tramite = $_POST['tipo_tramite'] ?? 'registro_inicial'; // opcional: guardar en columna aparte
 
-// 1. Crear una nueva solicitud en la BD
-$sql_solicitud = "INSERT INTO solicitudes (usuario_id, estado_tramite) VALUES (?, 'registro_inicial')";
-$stmt = $conn->prepare($sql_solicitud);
-$stmt->bind_param("i", $usuario_id);
+try {
+    // 1. Crear nueva solicitud en la BD
+    $sql_solicitud = "INSERT INTO solicitudes (usuario_id, estado_tramite, fecha_creacion, fecha_ultimo_cambio)
+                      VALUES (:usuario_id, 'registro_inicial', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+    $stmt = $conn->prepare($sql_solicitud);
+    $stmt->execute(['usuario_id' => $usuario_id]);
 
-if ($stmt->execute()) {
-    $solicitud_id = $stmt->insert_id; // Obtenemos el ID del folio creado
-    
+    // Obtener el ID generado
+    $solicitud_id = $conn->lastInsertId();
+
     // Crear carpeta de subidas si no existe
     $target_dir = "uploads/" . $solicitud_id . "/";
     if (!file_exists($target_dir)) {
         mkdir($target_dir, 0777, true);
     }
 
-    // Función para guardar archivo
+    // Función para guardar archivo y registrar en documentos_iniciales
     function guardarDocumento($conn, $fileInputName, $tipoDoc, $solicitudId, $targetDir) {
         if (!empty($_FILES[$fileInputName]['name'])) {
-            $fileName = basename($_FILES[$fileInputName]['name']);
-            $targetFilePath = $targetDir . $fileName;
-            
+            $fileName        = basename($_FILES[$fileInputName]['name']);
+            $targetFilePath  = $targetDir . $fileName;
+
             if (move_uploaded_file($_FILES[$fileInputName]['tmp_name'], $targetFilePath)) {
-                $sql_doc = "INSERT INTO documentos_iniciales (solicitud_id, tipo_documento, ruta_archivo) VALUES (?, ?, ?)";
+                $sql_doc = "INSERT INTO documentos_iniciales (solicitud_id, tipo_documento, ruta_archivo)
+                            VALUES (:solicitud_id, :tipo_documento, :ruta_archivo)";
                 $stmt_doc = $conn->prepare($sql_doc);
-                $stmt_doc->bind_param("iss", $solicitudId, $tipoDoc, $targetFilePath);
-                $stmt_doc->execute();
+                $stmt_doc->execute([
+                    'solicitud_id'   => $solicitudId,
+                    'tipo_documento' => $tipoDoc,
+                    'ruta_archivo'   => $targetFilePath
+                ]);
             }
         }
     }
@@ -46,11 +52,10 @@ if ($stmt->execute()) {
     guardarDocumento($conn, 'archivo_evidencia', 'EvidenciaAdicional', $solicitud_id, $target_dir);
 
     echo "<script>alert('Solicitud enviada correctamente. Folio #$solicitud_id'); window.location.href='dashboard_ciudadano.php';</script>";
+    exit();
 
-} else {
-    echo "Error: " . $conn->error;
+} catch (PDOException $e) {
+    echo "<script>alert('Error en la base de datos: " . htmlspecialchars($e->getMessage()) . "'); window.history.back();</script>";
+    exit();
 }
-
-$stmt->close();
-$conn->close();
 ?>

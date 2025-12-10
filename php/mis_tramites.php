@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'db.php';
+include 'db.php'; // Debe ser PDO a PostgreSQL (Supabase)
 
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.html");
@@ -10,30 +10,56 @@ if (!isset($_SESSION['usuario_id'])) {
 $usuario_id = $_SESSION['usuario_id'];
 $nombre_usuario = $_SESSION['nombre'];
 
+try {
+    // 1. Total de Trámites
+    $stmt_total = $conn->prepare("SELECT COUNT(*) AS total FROM solicitudes WHERE usuario_id = :usuario_id");
+    $stmt_total->execute(['usuario_id' => $usuario_id]);
+    $total_tramites = (int)($stmt_total->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
 
-// --- CONSULTAS PARA ESTADÍSTICAS REALES ---
+    // 2. Aprobados (Estado: listo_activacion o activo)
+    $stmt_aprobados = $conn->prepare("
+        SELECT COUNT(*) AS total
+        FROM solicitudes
+        WHERE usuario_id = :usuario_id
+          AND (estado_tramite = 'activo' OR estado_tramite = 'listo_activacion')
+    ");
+    $stmt_aprobados->execute(['usuario_id' => $usuario_id]);
+    $total_aprobados = (int)($stmt_aprobados->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
 
-// 1. Total de Trámites
-$sql_total = "SELECT COUNT(*) as total FROM solicitudes WHERE usuario_id = $usuario_id";
-$res_total = $conn->query($sql_total);
-$total_tramites = $res_total->fetch_assoc()['total'];
+    // 3. En Revisión (Estado: registro_inicial)
+    $stmt_revision = $conn->prepare("
+        SELECT COUNT(*) AS total
+        FROM solicitudes
+        WHERE usuario_id = :usuario_id
+          AND estado_tramite = 'registro_inicial'
+    ");
+    $stmt_revision->execute(['usuario_id' => $usuario_id]);
+    $total_revision = (int)($stmt_revision->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
 
-// 2. Aprobados (Estado: listo_activacion o activo)
-$sql_aprobados = "SELECT COUNT(*) as total FROM solicitudes WHERE usuario_id = $usuario_id AND (estado_tramite = 'activo' OR estado_tramite = 'listo_activacion')";
-$res_aprobados = $conn->query($sql_aprobados);
-$total_aprobados = $res_aprobados->fetch_assoc()['total'];
+    // 4. Pendientes (Estado: pendiente_aclaracion)
+    $stmt_pendientes = $conn->prepare("
+        SELECT COUNT(*) AS total
+        FROM solicitudes
+        WHERE usuario_id = :usuario_id
+          AND estado_tramite = 'pendiente_aclaracion'
+    ");
+    $stmt_pendientes->execute(['usuario_id' => $usuario_id]);
+    $total_pendientes = (int)($stmt_pendientes->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
 
-// 3. En Revisión (Estado: registro_inicial)
-$sql_revision = "SELECT COUNT(*) as total FROM solicitudes WHERE usuario_id = $usuario_id AND estado_tramite = 'registro_inicial'";
-$res_revision = $conn->query($sql_revision);
-$total_revision = $res_revision->fetch_assoc()['total'];
+    // 5. Listado de trámites del usuario (ordenados por fecha_creacion DESC)
+    $stmt_tramites = $conn->prepare("
+        SELECT id, fecha_creacion, fecha_ultimo_cambio, ultimos_comentarios, estado_tramite
+        FROM solicitudes
+        WHERE usuario_id = :usuario_id
+        ORDER BY fecha_creacion DESC
+    ");
+    $stmt_tramites->execute(['usuario_id' => $usuario_id]);
+    $tramites = $stmt_tramites->fetchAll(PDO::FETCH_ASSOC);
 
-// 4. Pendientes (Estado: pendiente_aclaracion)
-$sql_pendientes = "SELECT COUNT(*) as total FROM solicitudes WHERE usuario_id = $usuario_id AND estado_tramite = 'pendiente_aclaracion'";
-$res_pendientes = $conn->query($sql_pendientes);
-$total_pendientes = $res_pendientes->fetch_assoc()['total'];
+} catch (PDOException $e) {
+    die("Error en las consultas: " . htmlspecialchars($e->getMessage()));
+}
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -41,7 +67,8 @@ $total_pendientes = $res_pendientes->fetch_assoc()['total'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Padrón Orgullo Migrante - Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css"> </head>
+    <link rel="stylesheet" href="styles.css">
+</head>
 <body class="dashboard-body">
 
     <header class="dashboard-header">
@@ -58,9 +85,8 @@ $total_pendientes = $res_pendientes->fetch_assoc()['total'];
     </header>
 
     <div class="main-container dashboard-container">
-        
-       <div class="stats-grid">
-            
+
+        <div class="stats-grid">
             <div class="stat-card">
                 <h3>Total de Trámites</h3>
                 <p class="stat-number"><?php echo $total_tramites; ?></p>
@@ -80,145 +106,118 @@ $total_pendientes = $res_pendientes->fetch_assoc()['total'];
                 <h3>Pendientes</h3>
                 <p class="stat-number text-orange"><?php echo $total_pendientes; ?></p>
             </div>
-
         </div>
 
         <div class="action-tabs">
-                   <button class="tab-btn" onclick="window.location.href='dashboard_ciudadano.php'">
-    ⬆ Cargar Documentos
-</button>
-      <button class="tab-btn active"> 
-        📄 Mis Trámites
-    </button>
+            <button class="tab-btn" onclick="window.location.href='dashboard_ciudadano.php'">⬆ Cargar Documentos</button>
+            <button class="tab-btn active">📄 Mis Trámites</button>
             <button class="tab-btn">🔔 Notificaciones <span class="badge">3</span></button>
         </div>
 
-       <div id="lista-tramites" style="margin-top: 40px;">
-    <h2 style="margin-bottom: 20px;">Mis Trámites Recientes</h2>
+        <div id="lista-tramites" style="margin-top: 40px;">
+            <h2 style="margin-bottom: 20px;">Mis Trámites Recientes</h2>
 
-    <?php
-    // 1. Buscar todos los trámites de este usuario
-    $sql_tramites = "SELECT * FROM solicitudes WHERE usuario_id = $usuario_id ORDER BY fecha_creacion DESC";
-    $res_tramites = $conn->query($sql_tramites);
+            <?php if (!empty($tramites)) : ?>
+                <?php foreach ($tramites as $row) :
+                    $folio = "POM-2025-" . str_pad($row['id'], 5, "0", STR_PAD_LEFT);
+                    $fecha_sol = $row['fecha_creacion'] ? date("d/m/Y", strtotime($row['fecha_creacion'])) : '—';
+                    $fecha_act = $row['fecha_ultimo_cambio'] ? date("d/m/Y", strtotime($row['fecha_ultimo_cambio'])) : '—';
+                    $comentario = $row['ultimos_comentarios'] ?? '';
 
-    if ($res_tramites->num_rows > 0) {
-        while ($row = $res_tramites->fetch_assoc()) {
-            
-            // Variables básicas
-            $folio = "POM-2025-" . str_pad($row['id'], 5, "0", STR_PAD_LEFT);
-            $fecha_sol = date("d/m/Y", strtotime($row['fecha_creacion']));
-            $fecha_act = date("d/m/Y", strtotime($row['fecha_ultimo_cambio']));
-            $comentario = $row['ultimos_comentarios'];
-            
-            // Lógica de Estado (Colores y Textos)
-            $estado_texto = "";
-            $clase_color = "";
-            $icono = "";
+                    $estado = strtolower(trim($row['estado_tramite'] ?? ''));
+                    $estado_texto = "Devuelto";
+                    $clase_color = "bg-red";
+                    $icono = "times-circle";
+                    $msg_default = "El trámite ha sido devuelto. Lee las notas abajo.";
 
-           switch (trim(strtolower($row['estado_tramite']))) { 
-    // Usamos trim() y strtolower() para ignorar mayúsculas y espacios extra
-    
-    case 'activo':
-    case 'listo_activacion':
-        $estado_texto = "Aprobado";
-        $clase_color = "bg-green";
-        $icono = "check-circle";
-        $msg_default = "¡Felicidades! Tu folio ha sido aprobado.";
-        break;
-    
-    case 'registro_inicial':
-        $estado_texto = "En Revisión";
-        $clase_color = "bg-black";
-        $icono = "clock";
-        $msg_default = "Tu solicitud está siendo analizada.";
-        break;
+                    switch ($estado) {
+                        case 'activo':
+                        case 'listo_activacion':
+                            $estado_texto = "Aprobado";
+                            $clase_color = "bg-green";
+                            $icono = "check-circle";
+                            $msg_default = "¡Felicidades! Tu folio ha sido aprobado.";
+                            break;
 
-    case 'pendiente_aclaracion':
-        $estado_texto = "Aclaración Requerida";
-        $clase_color = "bg-orange";
-        $icono = "exclamation-circle";
-        $msg_default = "Se requiere información adicional.";
-        break;
+                        case 'registro_inicial':
+                            $estado_texto = "En Revisión";
+                            $clase_color = "bg-black";
+                            $icono = "clock";
+                            $msg_default = "Tu solicitud está siendo analizada.";
+                            break;
 
-    // --- AQUÍ ESTÁ EL ARREGLO ---
-    case 'baja':
-    case 'devuelto': 
-        $estado_texto = "Devuelto";
-        $clase_color = "bg-red";  // Asegúrate de tener esta clase en tu CSS
-        $icono = "times-circle";
-        $msg_default = "El trámite ha sido devuelto. Lee las notas abajo.";
-        break;
+                        case 'pendiente_aclaracion':
+                            $estado_texto = "Aclaración Requerida";
+                            $clase_color = "bg-orange";
+                            $icono = "exclamation-circle";
+                            $msg_default = "Se requiere información adicional.";
+                            break;
 
-    // --- CÓDIGO DE SEGURIDAD (DEFAULT) ---
-    // Si la base de datos tiene un nombre raro, caerá aquí y te lo mostrará
-    default:
-      case 'devuelto': 
-        $estado_texto = "Devuelto";
-        $clase_color = "bg-red";  // Asegúrate de tener esta clase en tu CSS
-        $icono = "times-circle";
-        $msg_default = "El trámite ha sido devuelto. Lee las notas abajo.";
-        break;
-}
-    ?>
+                        case 'baja':
+                        case 'devuelto':
+                            $estado_texto = "Devuelto";
+                            $clase_color = "bg-red";
+                            $icono = "times-circle";
+                            $msg_default = "El trámite ha sido devuelto. Lee las notas abajo.";
+                            break;
 
-    <div class="tramite-card">
-        
-        <div class="tramite-header">
-            <div>
-                <div class="tramite-title">Registro Padrón Orgullo Migrante</div>
-                <div class="tramite-folio">Folio: <?php echo $folio; ?></div>
-            </div>
-            <div class="status-pill <?php echo $clase_color; ?>">
-                <i class="fas fa-<?php echo $icono; ?>"></i> <?php echo $estado_texto; ?>
-            </div>
-        </div>
-
-        <div class="tramite-fechas">
-            <div>
-                <div class="fecha-label">Fecha de Solicitud</div>
-                <div class="fecha-valor"><?php echo $fecha_sol; ?></div>
-            </div>
-            <div>
-                <div class="fecha-label">Última Actualización</div>
-                <div class="fecha-valor"><?php echo $fecha_act; ?></div>
-            </div>
-        </div>
-
-        <div class="mensaje-revisor">
-            <i class="fas fa-info-circle mensaje-icon"></i>
-            <div>
-                <?php 
-                // Si hay un comentario del revisor, muéstralo. Si no, mensaje por defecto.
-                if (!empty($comentario)) {
-                    echo "<strong>Nota del Revisor:</strong> " . htmlspecialchars($comentario);
-                } else {
-                    echo $msg_default;
-                }
+                        default:
+                            // mantiene valores por defecto "Devuelto"
+                            break;
+                    }
                 ?>
-            </div>
+                <div class="tramite-card">
+                    <div class="tramite-header">
+                        <div>
+                            <div class="tramite-title">Registro Padrón Orgullo Migrante</div>
+                            <div class="tramite-folio">Folio: <?php echo htmlspecialchars($folio); ?></div>
+                        </div>
+                        <div class="status-pill <?php echo htmlspecialchars($clase_color); ?>">
+                            <i class="fas fa-<?php echo htmlspecialchars($icono); ?>"></i> <?php echo htmlspecialchars($estado_texto); ?>
+                        </div>
+                    </div>
+
+                    <div class="tramite-fechas">
+                        <div>
+                            <div class="fecha-label">Fecha de Solicitud</div>
+                            <div class="fecha-valor"><?php echo htmlspecialchars($fecha_sol); ?></div>
+                        </div>
+                        <div>
+                            <div class="fecha-label">Última Actualización</div>
+                            <div class="fecha-valor"><?php echo htmlspecialchars($fecha_act); ?></div>
+                        </div>
+                    </div>
+
+                    <div class="mensaje-revisor">
+                        <i class="fas fa-info-circle mensaje-icon"></i>
+                        <div>
+                            <?php
+                            if (!empty($comentario)) {
+                                echo "<strong>Nota del Revisor:</strong> " . htmlspecialchars($comentario);
+                            } else {
+                                echo htmlspecialchars($msg_default);
+                            }
+                            ?>
+                        </div>
+                    </div>
+
+                    <?php if ($estado === 'pendiente_aclaracion') : ?>
+                        <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                            <p style="font-size: 13px; color: #f97316; font-weight: 600; margin-bottom: 5px;">Subir Aclaración:</p>
+                            <form action="procesar_aclaracion.php" method="POST" enctype="multipart/form-data" style="display:flex; gap:10px;">
+                                <input type="hidden" name="solicitud_id" value="<?php echo htmlspecialchars($row['id']); ?>">
+                                <input type="file" name="archivo_aclaracion" required style="font-size: 12px;">
+                                <button type="submit" class="submit-btn" style="width: auto; padding: 5px 15px; background: #f97316;">Enviar</button>
+                            </form>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            <?php else : ?>
+                <p style="color:#666;">Aún no tienes trámites registrados.</p>
+            <?php endif; ?>
         </div>
 
-        <?php if ($row['estado_tramite'] == 'pendiente_aclaracion') { ?>
-            <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                <p style="font-size: 13px; color: #f97316; font-weight: 600; margin-bottom: 5px;">Subir Aclaración:</p>
-                <form action="procesar_aclaracion.php" method="POST" enctype="multipart/form-data" style="display:flex; gap:10px;">
-                    <input type="hidden" name="solicitud_id" value="<?php echo $row['id']; ?>">
-                    <input type="file" name="archivo_aclaracion" required style="font-size: 12px;">
-                    <button type="submit" class="submit-btn" style="width: auto; padding: 5px 15px; background: #f97316;">Enviar</button>
-                </form>
-            </div>
-        <?php } ?>
-
-    </div>
-    <?php 
-        } // Fin del While
-    } else {
-        echo "<p style='color:#666;'>Aún no tienes trámites registrados.</p>";
-    }
-    ?>
-</div>
-            
-        </div>
     </div>
 
 </body>

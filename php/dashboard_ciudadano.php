@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'db.php';
+include 'db.php'; // Este db.php ahora debe ser el que conecta a Supabase vía PDO
 
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.html");
@@ -12,25 +12,30 @@ $nombre_usuario = $_SESSION['nombre'];
 
 // --- CONSULTAS PARA ESTADÍSTICAS REALES ---
 
-// 1. Total de Trámites
-$sql_total = "SELECT COUNT(*) as total FROM solicitudes WHERE usuario_id = $usuario_id";
-$res_total = $conn->query($sql_total);
-$total_tramites = $res_total->fetch_assoc()['total'];
+try {
+    // 1. Total de Trámites
+    $stmt_total = $conn->prepare("SELECT COUNT(*) as total FROM solicitudes WHERE usuario_id = :usuario_id");
+    $stmt_total->execute(['usuario_id' => $usuario_id]);
+    $total_tramites = $stmt_total->fetch(PDO::FETCH_ASSOC)['total'];
 
-// 2. Aprobados (Estado: listo_activacion o activo)
-$sql_aprobados = "SELECT COUNT(*) as total FROM solicitudes WHERE usuario_id = $usuario_id AND (estado_tramite = 'activo' OR estado_tramite = 'listo_activacion')";
-$res_aprobados = $conn->query($sql_aprobados);
-$total_aprobados = $res_aprobados->fetch_assoc()['total'];
+    // 2. Aprobados (Estado: listo_activacion o activo)
+    $stmt_aprobados = $conn->prepare("SELECT COUNT(*) as total FROM solicitudes WHERE usuario_id = :usuario_id AND (estado_tramite = 'activo' OR estado_tramite = 'listo_activacion')");
+    $stmt_aprobados->execute(['usuario_id' => $usuario_id]);
+    $total_aprobados = $stmt_aprobados->fetch(PDO::FETCH_ASSOC)['total'];
 
-// 3. En Revisión (Estado: registro_inicial)
-$sql_revision = "SELECT COUNT(*) as total FROM solicitudes WHERE usuario_id = $usuario_id AND estado_tramite = 'registro_inicial'";
-$res_revision = $conn->query($sql_revision);
-$total_revision = $res_revision->fetch_assoc()['total'];
+    // 3. En Revisión (Estado: registro_inicial)
+    $stmt_revision = $conn->prepare("SELECT COUNT(*) as total FROM solicitudes WHERE usuario_id = :usuario_id AND estado_tramite = 'registro_inicial'");
+    $stmt_revision->execute(['usuario_id' => $usuario_id]);
+    $total_revision = $stmt_revision->fetch(PDO::FETCH_ASSOC)['total'];
 
-// 4. Pendientes (Estado: pendiente_aclaracion)
-$sql_pendientes = "SELECT COUNT(*) as total FROM solicitudes WHERE usuario_id = $usuario_id AND estado_tramite = 'pendiente_aclaracion'";
-$res_pendientes = $conn->query($sql_pendientes);
-$total_pendientes = $res_pendientes->fetch_assoc()['total'];
+    // 4. Pendientes (Estado: pendiente_aclaracion)
+    $stmt_pendientes = $conn->prepare("SELECT COUNT(*) as total FROM solicitudes WHERE usuario_id = :usuario_id AND estado_tramite = 'pendiente_aclaracion'");
+    $stmt_pendientes->execute(['usuario_id' => $usuario_id]);
+    $total_pendientes = $stmt_pendientes->fetch(PDO::FETCH_ASSOC)['total'];
+
+} catch (PDOException $e) {
+    die("Error en las consultas: " . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -40,7 +45,8 @@ $total_pendientes = $res_pendientes->fetch_assoc()['total'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Padrón Orgullo Migrante - Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css"> </head>
+    <link rel="stylesheet" href="styles.css">
+</head>
 <body class="dashboard-body">
 
     <header class="dashboard-header">
@@ -57,9 +63,9 @@ $total_pendientes = $res_pendientes->fetch_assoc()['total'];
     </header>
 
     <div class="main-container dashboard-container">
-        
+
        <div class="stats-grid">
-            
+
             <div class="stat-card">
                 <h3>Total de Trámites</h3>
                 <p class="stat-number"><?php echo $total_tramites; ?></p>
@@ -84,9 +90,7 @@ $total_pendientes = $res_pendientes->fetch_assoc()['total'];
 
         <div class="action-tabs">
             <button class="tab-btn active">⬆ Cargar Documentos</button>
-           <button class="tab-btn" onclick="window.location.href='mis_tramites.php'">
-    📄 Mis Trámites
-</button>
+            <button class="tab-btn" onclick="window.location.href='mis_tramites.php'">📄 Mis Trámites</button>
             <button class="tab-btn">🔔 Notificaciones <span class="badge">3</span></button>
         </div>
 
@@ -99,13 +103,13 @@ $total_pendientes = $res_pendientes->fetch_assoc()['total'];
             </div>
 
             <form action="procesar_solicitud.php" method="POST" enctype="multipart/form-data">
-                
+
                 <div class="form-grid">
                     <div class="input-group">
                         <label>CURP *</label>
                         <input type="file" name="archivo_curp" required accept=".pdf,.jpg,.png">
                     </div>
-                    
+
                     <div class="input-group">
                         <label>RFC *</label>
                         <input type="file" name="archivo_rfc" required accept=".pdf,.jpg,.png">
@@ -138,7 +142,7 @@ $total_pendientes = $res_pendientes->fetch_assoc()['total'];
 
                 <button type="submit" class="submit-btn full-btn">Enviar Solicitud</button>
             </form>
-            
+
         </div>
     </div>
 

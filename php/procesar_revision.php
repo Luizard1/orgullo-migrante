@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'db.php';
+include 'db.php'; // Debe ser PDO conectado a PostgreSQL (Supabase)
 
 // Seguridad: Solo revisores pueden entrar aquí
 if (!isset($_SESSION['usuario_id'])) {
@@ -9,67 +9,73 @@ if (!isset($_SESSION['usuario_id'])) {
 }
 
 // Recibir datos del formulario del panel_revisor.php
-$solicitud_id = $_POST['solicitud_id'];
-$accion = $_POST['accion']; // aprobar, aclaracion, devolver
-$notas = $_POST['notas'];   // El texto del textarea
+$solicitud_id = isset($_POST['solicitud_id']) ? (int)$_POST['solicitud_id'] : 0;
+$accion       = $_POST['accion'] ?? '';
+$notas        = trim($_POST['notas'] ?? '');
 
-$nuevo_estado = "";
-$mensaje_alerta = "";
+$nuevo_estado   = '';
+$mensaje_alerta = '';
 
 // Lógica de los botones
 switch ($accion) {
     case 'aprobar':
-        $nuevo_estado = 'listo_activacion'; 
+        $nuevo_estado   = 'listo_activacion';
         $mensaje_alerta = "Solicitud APROBADA correctamente.";
         break;
 
     case 'aclaracion':
-        $nuevo_estado = 'pendiente_aclaracion';
+        $nuevo_estado   = 'pendiente_aclaracion';
         $mensaje_alerta = "Se ha solicitado una aclaración al ciudadano.";
-        
-        // Validación: Exigir nota obligatoria
-        if (empty(trim($notas))) {
+        if ($notas === '') {
             echo "<script>alert('Error: Debes escribir una nota explicando qué aclaración necesitas.'); window.history.back();</script>";
             exit();
         }
         break;
 
     case 'devolver':
-        // --- CAMBIO IMPORTANTE AQUÍ ---
-        // Cambiamos a 'devuelto' para que salga de tu lista de pendientes
-        $nuevo_estado = 'devuelto'; 
+        $nuevo_estado   = 'devuelto'; // asegúrate de que este valor esté permitido en tu CHECK de estado_tramite
         $mensaje_alerta = "El trámite ha sido marcado como DEVUELTO.";
-        
-        if (empty(trim($notas))) {
+        if ($notas === '') {
             echo "<script>alert('Error: Para devolver un trámite debes explicar la razón en las notas.'); window.history.back();</script>";
             exit();
         }
         break;
+
+    default:
+        echo "<script>alert('Acción no reconocida.'); window.history.back();</script>";
+        exit();
 }
 
-// Actualizar la Base de Datos
-if ($nuevo_estado != "") {
-    // Actualizamos Estado, Fecha de Cambio y guardamos las Notas
-    $sql = "UPDATE solicitudes 
-            SET estado_tramite = ?, 
-                fecha_ultimo_cambio = NOW(), 
-                ultimos_comentarios = ? 
-            WHERE id = ?";
-            
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssi", $nuevo_estado, $notas, $solicitud_id);
+// Actualizar la Base de Datos en Supabase
+if ($nuevo_estado !== '' && $solicitud_id > 0) {
+    try {
+        $sql = "
+            UPDATE solicitudes
+            SET estado_tramite = :estado,
+                fecha_ultimo_cambio = CURRENT_TIMESTAMP,
+                ultimos_comentarios = :notas
+            WHERE id = :id
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([
+            'estado' => $nuevo_estado,
+            'notas'  => $notas,
+            'id'     => $solicitud_id
+        ]);
 
-    if ($stmt->execute()) {
-        // Éxito: Regresar al panel
-        echo "<script>
-                alert('$mensaje_alerta'); 
-                window.location.href='panel_revisor.php';
-              </script>";
-    } else {
-        echo "Error al actualizar: " . $conn->error;
+        if ($stmt->rowCount() === 1) {
+            echo "<script>
+                    alert('$mensaje_alerta');
+                    window.location.href='panel_revisor.php';
+                  </script>";
+            exit();
+        } else {
+            echo "<script>alert('No se encontró la solicitud o no se pudo actualizar.'); window.history.back();</script>";
+            exit();
+        }
+    } catch (PDOException $e) {
+        echo "<script>alert('Error al actualizar: " . htmlspecialchars($e->getMessage()) . "'); window.history.back();</script>";
+        exit();
     }
-    
-    $stmt->close();
 }
-$conn->close();
 ?>
