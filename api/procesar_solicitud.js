@@ -1,5 +1,5 @@
-// /api/solicitud.js
-import { supabase } from '../../lib/db.js';
+// /api/procesar_solicitud.js
+import { supabase } from '../lib/db.js';
 import formidable from 'formidable';
 import fs from 'fs';
 
@@ -23,6 +23,7 @@ export default async function handler(req, res) {
 
     const usuario_id = parseInt(fields.usuario_id, 10);
     const tipo_tramite = fields.tipo_tramite || 'registro_inicial';
+    const observaciones = fields.observaciones || '';
 
     if (!usuario_id) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
@@ -37,7 +38,8 @@ export default async function handler(req, res) {
           estado_tramite: 'registro_inicial',
           fecha_creacion: new Date().toISOString(),
           fecha_ultimo_cambio: new Date().toISOString(),
-          tipo_tramite
+          tipo_tramite,
+          observaciones
         })
         .select('id')
         .single();
@@ -56,27 +58,32 @@ export default async function handler(req, res) {
         const nombre_archivo = `${tipoDoc}_${solicitud_id}_${Date.now()}.${extension}`;
         const fileBuffer = fs.readFileSync(file.filepath);
 
+        // Subir a Supabase Storage (bucket "documentos")
         const { error: uploadError } = await supabase.storage
           .from('documentos')
           .upload(nombre_archivo, fileBuffer, { contentType: file.mimetype });
         if (uploadError) throw uploadError;
 
+        // Obtener URL pública
         const { data: publicUrlData } = supabase.storage
           .from('documentos')
           .getPublicUrl(nombre_archivo);
         const publicUrl = publicUrlData.publicUrl;
 
+        // Guardar referencia en la tabla documentos_iniciales
         const { error: insertError } = await supabase
           .from('documentos_iniciales')
           .insert({
             solicitud_id,
             tipo_documento: tipoDoc,
-            ruta_archivo: publicUrl
+            ruta_archivo: publicUrl,
+            validado_ocr: false,            // por defecto no validado
+            comentarios_sistema: ''         // vacío inicialmente
           });
         if (insertError) throw insertError;
       }
 
-      // 3. Guardar cada archivo
+      // 3. Guardar cada archivo del formulario
       await guardarDocumento(files.archivo_curp, 'CURP');
       await guardarDocumento(files.archivo_rfc, 'RFC');
       await guardarDocumento(files.archivo_domicilio, 'ComprobanteDomicilio');
